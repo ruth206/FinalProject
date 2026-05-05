@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BioAccess — Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --navy:   #0d1b2a;
+            --navy2:  #1a2d42;
+            --navy3:  #243d57;
+            --accent: #2ecc71;
+            --accent2:#27ae60;
+            --text:   #e8f0f7;
+            --muted:  #8fa8c2;
+            --border: rgba(255,255,255,0.08);
+            --danger: #e74c3c;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background-color: var(--navy);
+           
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 32px;
+            width: 100%;
+            max-width: 380px;
+            padding: 24px;
+        }
+
+        .logo {
+            width: 220px;
+            object-fit: contain;
+            filter: brightness(1.1);
+        }
+
+        .login-card {
+            width: 100%;
+            background: rgba(26, 45, 66, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 36px 32px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .login-header h2 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+
+        .login-header p {
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-label {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--muted);
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .form-input {
+            width: 100%;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 11px 14px;
+            color: var(--text);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px;
+            transition: border-color 0.15s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .form-input::placeholder { color: var(--muted); }
+
+        .form-input.has-toggle { padding-right: 44px; }
+
+        .toggle-pw {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--muted);
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            transition: color 0.15s;
+        }
+
+        .toggle-pw:hover { color: var(--text); }
+
+        .fields {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 12px;
+            background: var(--accent);
+            color: var(--navy);
+            border: none;
+            border-radius: 8px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s;
+            letter-spacing: 0.02em;
+        }
+
+        .login-btn:hover { background: var(--accent2); }
+
+        .error-msg {
+            background: rgba(231,76,60,0.1);
+            border: 1px solid rgba(231,76,60,0.3);
+            color: #e74c3c;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            display: none;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .footer-text {
+            font-size: 12px;
+            color: var(--muted);
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<div class="login-wrapper">
+    <img src="/static/images/bioaccess.svg" alt="BioAccess" class="logo">
+
+    <div class="login-card">
+        <div class="login-header">
+            <h2>Admin Login</h2>
+            <p>Sign in to manage access and enrollments</p>
+        </div>
+
+        <div class="error-msg" id="error-msg" {% if error %}style=""display.flex"{% endif %}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            {{ error or "Invalid username or password." }}
+        </div>
+
+        <form action="/login" method="POST">
+            <div class="fields">
+                <div class="form-group">
+                    <label class="form-label">Username</label>
+                    <div class="input-wrapper">
+                        <input class="form-input" type="text" name="username" placeholder="Enter username" autocomplete="username">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <div class="input-wrapper">
+                        <input class="form-input has-toggle" type="password" name="password" id="password" placeholder="Enter password" autocomplete="current-password">
+                        <button type="button" class="toggle-pw" onclick="togglePassword()" id="toggle-btn">
+                            <svg id="eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" class="login-btn">Sign In</button>
+            </div>
+        </form>
+    </div>
+
+    <p class="footer-text">BioAccess v1.0 — Secure Biometric Access Control</p>
+</div>
+
+<script>
+function togglePassword() {
+    const input = document.getElementById("password");
+    const icon  = document.getElementById("eye-icon");
+    if (input.type === "password") {
+        input.type = "text";
+        icon.innerHTML = `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>`;
+    } else {
+        input.type = "password";
+        icon.innerHTML = `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>`;
+    }
+}
+</script>
+
+</body>
+</html>

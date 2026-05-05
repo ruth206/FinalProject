@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Settings{% endblock %}
+{% block page_title %}Settings{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Settings</h1>
+    <p>System configuration and status.</p>
+</div>
+
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:24px;">
+    <div class="card" style="margin:0;">
+        <div class="card-title">Access Control</div>
+        <div style="display:flex; flex-direction:column; gap:16px; font-size:14px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; padding-bottom:12px; border-bottom:1px solid var(--border);">
+                <div>
+                    <div style="font-weight:500;">Face Match Threshold</div>
+                    <div style="color:var(--muted); font-size:12px; margin-top:2px;">Lower value = stricter matching</div>
+                </div>
+                <span style="background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:6px 14px; font-family:monospace;">0.50</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; padding-bottom:12px; border-bottom:1px solid var(--border);">
+                <div>
+                    <div style="font-weight:500;">Camera Timeout</div>
+                    <div style="color:var(--muted); font-size:12px; margin-top:2px;">Seconds before access is denied</div>
+                </div>
+                <span style="background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:6px 14px; font-family:monospace;">15s</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <div style="font-weight:500;">Rate Limiting</div>
+                    <div style="color:var(--muted); font-size:12px; margin-top:2px;">Max login attempts per minute</div>
+                </div>
+                <span style="background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:6px 14px; font-family:monospace;">5/min</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="card" style="margin:0;">
+        <div class="card-title">System Info</div>
+        <div style="display:flex; flex-direction:column; gap:12px; font-size:14px;">
+            <div style="display:flex; justify-content:space-between; padding-bottom:12px; border-bottom:1px solid var(--border);">
+                <span style="color:var(--muted);">Device</span>
+                <span>Raspberry Pi 5</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; padding-bottom:12px; border-bottom:1px solid var(--border);">
+                <span style="color:var(--muted);">Database</span>
+                <span style="color:#22c55e;">Supabase Connected</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; padding-bottom:12px; border-bottom:1px solid var(--border);">
+                <span style="color:var(--muted);">Remote Access</span>
+                <span style="color:#22c55e;">bioaccess.ngrok.app</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; padding-bottom:12px; border-bottom:1px solid var(--border);">
+                <span style="color:var(--muted);">NFC Reader</span>
+                <span>ACR122U</span>
+            </div>
+            <div style="display:flex; justify-content:space-between;">
+                <span style="color:var(--muted);">Version</span>
+                <span>BioAccess v1.0</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,4 @@
+pcscd
+pcsc-tools
+libccid
+pyscard

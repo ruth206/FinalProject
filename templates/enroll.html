@@ -1,0 +1,409 @@
+{% extends "base.html" %}
+{% block title %}Enrollment{% endblock %}
+{% block page_title %}Enrollment{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-row.three { grid-template-columns: 1fr 1fr 1fr; }
+    .form-stack { display: flex; flex-direction: column; gap: 16px; }
+
+    .biometric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
+
+    .bio-panel { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+
+    .bio-panel-header {
+        padding: 14px 20px; border-bottom: 1px solid var(--border);
+        font-size: 13px; font-weight: 600; letter-spacing: 0.06em;
+        text-transform: uppercase; color: var(--muted);
+        display: flex; align-items: center; gap: 8px;
+    }
+
+    .bio-panel-header svg { width: 16px; height: 16px; color: var(--accent); }
+
+    .camera-container {
+        position: relative; background: #000; aspect-ratio: 4/3;
+        display: flex; align-items: center; justify-content: center; overflow: hidden;
+    }
+
+    .camera-feed { width: 100%; height: 100%; object-fit: cover; }
+
+    .camera-overlay {
+        position: absolute; inset: 0; display: flex;
+        align-items: center; justify-content: center; pointer-events: none;
+    }
+
+    .face-box {
+        width: 140px; height: 170px; border: 2px solid var(--accent);
+        border-radius: 8px; position: relative; opacity: 0.7;
+    }
+
+    .face-box::before, .face-box::after, .face-box span::before, .face-box span::after {
+        content: ''; position: absolute; width: 16px; height: 16px;
+        border-color: var(--accent); border-style: solid;
+    }
+    .face-box::before { top:-2px;left:-2px;border-width:3px 0 0 3px;border-radius:4px 0 0 0; }
+    .face-box::after  { top:-2px;right:-2px;border-width:3px 3px 0 0;border-radius:0 4px 0 0; }
+    .face-box span::before { bottom:-2px;left:-2px;border-width:0 0 3px 3px;border-radius:0 0 0 4px; }
+    .face-box span::after  { bottom:-2px;right:-2px;border-width:0 3px 3px 0;border-radius:0 0 4px 0; }
+
+    .bio-panel-footer { padding: 16px; display: flex; flex-direction: column; gap: 10px; border-top: 1px solid var(--border); }
+
+    .bio-status { font-size: 12px; color: var(--muted); text-align: center; min-height: 18px; }
+    .bio-status.ok  { color: var(--accent); }
+    .bio-status.err { color: var(--danger); }
+
+    .nfc-area {
+        aspect-ratio: 4/3; display: flex; flex-direction: column;
+        align-items: center; justify-content: center; gap: 20px;
+        background: linear-gradient(135deg, var(--navy) 0%, var(--navy3) 100%);
+    }
+
+    .nfc-icon {
+        width: 80px; height: 80px; border-radius: 50%;
+        background: rgba(46,204,113,0.1); border: 2px solid rgba(46,204,113,0.3);
+        display: flex; align-items: center; justify-content: center; transition: all 0.3s;
+    }
+
+    .nfc-icon.scanning { animation: pulse 1.5s ease-in-out infinite; border-color: var(--accent); background: rgba(46,204,113,0.2); }
+    .nfc-icon.done     { border-color: var(--accent); background: rgba(46,204,113,0.25); }
+    .nfc-icon svg      { width: 40px; height: 40px; color: var(--accent); }
+
+    @keyframes pulse {
+        0%,100% { box-shadow: 0 0 0 0 rgba(46,204,113,0.4); }
+        50%      { box-shadow: 0 0 0 16px rgba(46,204,113,0); }
+    }
+
+    .nfc-label { font-size: 13px; color: var(--muted); text-align: center; }
+    .nfc-uid   { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--accent); letter-spacing: 0.1em; min-height: 20px; text-align: center; }
+
+    .summary-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 24px; }
+
+    .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-top: 16px; }
+
+    .summary-item label { display: block; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+    .summary-item span  { font-size: 14px; font-weight: 500; color: var(--text); }
+
+    .progress-steps { display: flex; align-items: center; margin-bottom: 24px; }
+    .step { display: flex; align-items: center; gap: 8px; flex: 1; }
+
+    .step-dot {
+        width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--border);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 12px; font-weight: 600; color: var(--muted); background: var(--navy2);
+        flex-shrink: 0; transition: all 0.3s;
+    }
+
+    .step-dot.active { border-color: var(--accent); color: var(--accent); }
+    .step-dot.done   { border-color: var(--accent); background: var(--accent); color: var(--navy); }
+
+    .step-label { font-size: 12px; color: var(--muted); white-space: nowrap; }
+    .step-line  { flex: 1; height: 1px; background: var(--border); margin: 0 8px; transition: background 0.3s; }
+    .step-line.done { background: var(--accent); }
+
+    .status-bar {
+        padding: 12px 16px; border-radius: 8px; font-size: 13px;
+        display: none; margin-bottom: 16px; align-items: center; gap: 10px;
+    }
+    .status-bar.progress { display:flex; background:rgba(46,204,113,0.08); color:var(--accent); border:1px solid rgba(46,204,113,0.2); }
+    .status-bar.error    { display:flex; background:rgba(231,76,60,0.08);  color:var(--danger); border:1px solid rgba(231,76,60,0.2); }
+    .status-bar.done     { display:flex; background:rgba(46,204,113,0.12); color:var(--accent); border:1px solid rgba(46,204,113,0.3); font-weight:500; }
+
+    .spinner { width:14px;height:14px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .action-row { display: flex; justify-content: flex-end; gap: 12px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Enroll New User</h1>
+    <p>Register a new employee with NFC card and biometric face data.</p>
+</div>
+
+
+<div class="progress-steps">
+    <div class="step">
+        <div class="step-dot active" id="step-1">1</div>
+        <span class="step-label">User details</span>
+    </div>
+    <div class="step-line" id="line-1"></div>
+    <div class="step">
+        <div class="step-dot" id="step-2">2</div>
+        <span class="step-label">NFC card</span>
+    </div>
+    <div class="step-line" id="line-2"></div>
+    <div class="step">
+        <div class="step-dot" id="step-3">3</div>
+        <span class="step-label">Face capture</span>
+    </div>
+    <div class="step-line" id="line-3"></div>
+    <div class="step">
+        <div class="step-dot" id="step-4">4</div>
+        <span class="step-label">Complete</span>
+    </div>
+</div>
+
+<div class="status-bar" id="status-bar">
+    <div class="spinner" id="status-spinner"></div>
+    <span id="status-text"></span>
+</div>
+
+
+<div class="card" style="margin-bottom: 24px;">
+    <div class="card-title">User Information</div>
+    <div class="form-stack">
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">First Name</label>
+                <input class="form-input" type="text" id="first_name" placeholder="John">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Last Name</label>
+                <input class="form-input" type="text" id="last_name" placeholder="Smith">
+            </div>
+        </div>
+        <div class="form-row three">
+            <div class="form-group">
+                <label class="form-label">Email</label>
+                <input class="form-input" type="email" id="email" placeholder="john.smith@company.com">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Role</label>
+                <select class="form-select" id="role">
+                    <option value="user">User</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Department</label>
+                <select class="form-select" id="department">
+                    <option value="IT">IT</option>
+                    <option value="Engineering">Engineering</option>
+                    <option value="HR">HR</option>
+                    <option value="Finance">Finance</option>
+                    <option value="Operations">Operations</option>
+                </select>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="biometric-grid">
+   
+    <div class="bio-panel">
+        <div class="bio-panel-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>
+            Face Enrollment
+        </div>
+        <div class="camera-container">
+            <img class="camera-feed" src="/camera_feed" alt="Camera feed">
+            <div class="camera-overlay">
+                <div class="face-box"><span></span></div>
+            </div>
+        </div>
+        <div class="bio-panel-footer">
+            <div class="bio-status" id="face-status">Complete NFC scan first</div>
+            <button class="btn btn-primary" id="face-btn" onclick="captureFace()" disabled>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
+                Capture Face
+            </button>
+        </div>
+    </div>
+
+ 
+    <div class="bio-panel">
+        <div class="bio-panel-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            NFC Card Enrollment
+        </div>
+        <div class="nfc-area">
+            <div class="nfc-icon" id="nfc-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M6 9C6 6.239 8.239 4 11 4h2c2.761 0 5 2.239 5 5v6c0 2.761-2.239 5-5 5h-2c-2.761 0-5-2.239-5-5V9z"/>
+                    <path d="M9 9h6M9 12h6M9 15h4"/>
+                </svg>
+            </div>
+            <div class="nfc-label" id="nfc-label">Ready to scan</div>
+            <div class="nfc-uid" id="nfc-uid"></div>
+        </div>
+        <div class="bio-panel-footer">
+            <div class="bio-status" id="nfc-status">Fill in user details first</div>
+            <button class="btn btn-secondary" id="nfc-btn" onclick="scanNFC()" disabled>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 6v16l7-4 8 4 7-4V2l-7 4-8-4-7 4z"/><path d="M8 2v16M16 6v16"/></svg>
+                Scan NFC Card
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="summary-card">
+    <div class="card-title">Enrollment Summary</div>
+    <div class="summary-grid">
+        <div class="summary-item"><label>Full Name</label><span id="sum-name">—</span></div>
+        <div class="summary-item"><label>Email</label><span id="sum-email">—</span></div>
+        <div class="summary-item"><label>Role</label><span id="sum-role">—</span></div>
+        <div class="summary-item"><label>NFC Card</label><span id="sum-nfc">—</span></div>
+    </div>
+</div>
+
+<div class="action-row">
+    <a href="/dashboard" class="btn btn-secondary">Cancel</a>
+    <button class="btn btn-primary" id="enroll-btn" onclick="saveEnrollment()" disabled>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        Enroll User
+    </button>
+</div>
+
+<script>
+
+const SESSION_ID = Date.now().toString();
+let nfcDone  = false;
+let faceDone = false;
+let nfcPoll  = null;
+
+["first_name","last_name","email","role"].forEach(id => {
+    document.getElementById(id).addEventListener("input", () => {
+        const fn = document.getElementById("first_name").value;
+        const ln = document.getElementById("last_name").value;
+        const em = document.getElementById("email").value;
+        const ro = document.getElementById("role").value;
+        document.getElementById("sum-name").textContent  = (fn||ln) ? `${fn} ${ln}`.trim() : "—";
+        document.getElementById("sum-email").textContent = em || "—";
+        document.getElementById("sum-role").textContent  = ro || "—";
+       
+        const ready = fn && ln && em;
+        document.getElementById("nfc-btn").disabled = !ready;
+        document.getElementById("nfc-status").textContent = ready ? "Tap card on reader when ready" : "Fill in user details first";
+    });
+});
+
+function setStep(n) {
+    for (let i = 1; i <= 4; i++) {
+        const dot  = document.getElementById(`step-${i}`);
+        const line = document.getElementById(`line-${i}`);
+        if (i < n)        { dot.className = "step-dot done"; dot.textContent = "✓"; }
+        else if (i === n) { dot.className = "step-dot active"; }
+        else              { dot.className = "step-dot"; dot.textContent = i; }
+        if (line) line.className = i < n ? "step-line done" : "step-line";
+    }
+}
+
+function showStatus(msg, type) {
+    const bar  = document.getElementById("status-bar");
+    const text = document.getElementById("status-text");
+    const spin = document.getElementById("status-spinner");
+    bar.className = `status-bar ${type}`;
+    text.textContent = msg;
+    spin.style.display = type === "progress" ? "block" : "none";
+}
+
+
+async function scanNFC() {
+    document.getElementById("nfc-btn").disabled = true;
+    document.getElementById("nfc-icon").classList.add("scanning");
+    document.getElementById("nfc-label").textContent = "Waiting for card...";
+    document.getElementById("nfc-status").textContent = "Tap your NFC card on the reader now";
+    setStep(2);
+    showStatus("Waiting for NFC card — tap it on the reader now...", "progress");
+
+    await fetch("/enroll/scan_nfc", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ session_id: SESSION_ID })
+    });
+
+    nfcPoll = setInterval(async () => {
+        const res  = await fetch(`/enroll/nfc_status/${SESSION_ID}`);
+        const data = await res.json();
+
+        if (data.status === "done") {
+            clearInterval(nfcPoll);
+            nfcDone = true;
+            document.getElementById("nfc-icon").classList.remove("scanning");
+            document.getElementById("nfc-icon").classList.add("done");
+            document.getElementById("nfc-label").textContent = "Card registered";
+            document.getElementById("nfc-uid").textContent   = data.uid;
+            document.getElementById("nfc-status").textContent = "✓ Card scanned successfully";
+            document.getElementById("sum-nfc").textContent    = data.uid;
+            setStep(3);
+            showStatus("Card scanned. Now position your face in the camera and click Capture Face.", "progress");
+            
+            document.getElementById("face-btn").disabled = false;
+            document.getElementById("face-status").textContent = "Position face in the guide box and click capture";
+
+        } else if (data.status === "error") {
+            clearInterval(nfcPoll);
+            document.getElementById("nfc-icon").classList.remove("scanning");
+            document.getElementById("nfc-btn").disabled = false;
+            document.getElementById("nfc-label").textContent = "Scan failed — try again";
+            showStatus("NFC scan failed. Please try again.", "error");
+        }
+    }, 1000);
+}
+
+
+async function captureFace() {
+    document.getElementById("face-btn").disabled = true;
+    document.getElementById("face-status").textContent = "Capturing — hold still...";
+    showStatus("Capturing face — hold still and look directly at the camera...", "progress");
+
+    const res  = await fetch("/enroll/capture_face", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ session_id: SESSION_ID })
+    });
+    const data = await res.json();
+
+    if (data.ok) {
+        faceDone = true;
+        document.getElementById("face-status").textContent = "✓ Face captured successfully";
+        document.getElementById("face-status").className = "bio-status ok";
+        setStep(4);
+        showStatus("Face captured. Click Enroll User to complete registration.", "progress");
+        document.getElementById("enroll-btn").disabled = false;
+    } else {
+        document.getElementById("face-btn").disabled = false;
+        document.getElementById("face-status").textContent = data.message;
+        document.getElementById("face-status").className = "bio-status err";
+        showStatus(data.message, "error");
+    }
+}
+
+
+async function saveEnrollment() {
+    if (!nfcDone || !faceDone) {
+        showStatus("Please complete NFC scan and face capture first.", "error");
+        return;
+    }
+
+    document.getElementById("enroll-btn").disabled = true;
+    showStatus("Saving enrollment...", "progress");
+
+    const res  = await fetch("/enroll/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            session_id: SESSION_ID,
+            first_name: document.getElementById("first_name").value.trim(),
+            last_name:  document.getElementById("last_name").value.trim(),
+            email:      document.getElementById("email").value.trim(),
+            role:       document.getElementById("role").value
+        })
+    });
+    const data = await res.json();
+
+    if (data.ok) {
+        showStatus("Enrollment complete! User has been registered successfully.", "done");
+        setStep(5);
+        
+        setTimeout(() => { window.location.href = "/dashboard"; }, 3000);
+    } else {
+        document.getElementById("enroll-btn").disabled = false;
+        showStatus(data.message, "error");
+    }
+}
+</script>
+{% endblock %}

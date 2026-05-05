@@ -1,0 +1,39 @@
+body {
+    margin: 0;
+    height: 100vh;
+
+    background-image: url("static/images/swirl.png");
+    background-size: cover;
+    background-position: right center;
+    background-repeat: no-repeat;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.login{
+    width:300px;
+    padding:20px;
+    border-radius:10px;
+    display:flex;
+    flex-direction:column;
+    gap:20px;
+}
+
+.login input {
+    width: 100%;
+    padding: 10px;
+    margin: 40px 0;
+}
+
+.login button {
+    width: 100%;
+    padding: 10px;
+    background: lawngreen;
+    border: none;
+}
+.login form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}

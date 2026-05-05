@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Reports{% endblock %}
+{% block page_title %}Reports{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Reports</h1>
+    <p>Access and security reports.</p>
+</div>
+
+<div style="display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px;">
+    <div class="card" style="margin:0; padding:16px 20px;">
+        <div style="font-size:12px; color:var(--muted); margin-bottom:4px;">Total Attempts</div>
+        <div id="total-attempts" style="font-size:28px; font-weight:700;">—</div>
+    </div>
+    <div class="card" style="margin:0; padding:16px 20px;">
+        <div style="font-size:12px; color:var(--muted); margin-bottom:4px;">Granted</div>
+        <div id="total-granted" style="font-size:28px; font-weight:700; color:#22c55e;">—</div>
+    </div>
+    <div class="card" style="margin:0; padding:16px 20px;">
+        <div style="font-size:12px; color:var(--muted); margin-bottom:4px;">Denied</div>
+        <div id="total-denied" style="font-size:28px; font-weight:700; color:#ef4444;">—</div>
+    </div>
+    <div class="card" style="margin:0; padding:16px 20px;">
+        <div style="font-size:12px; color:var(--muted); margin-bottom:4px;">Success Rate</div>
+        <div id="success-rate" style="font-size:28px; font-weight:700;">—</div>
+    </div>
+</div>
+
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:24px;">
+    <div class="card" style="margin:0;">
+        <div class="card-title">Most Active Users</div>
+        <div id="top-users-loading" style="color:var(--muted); font-size:14px;">Loading...</div>
+        <div id="top-users" style="display:none; flex-direction:column; gap:10px;"></div>
+    </div>
+
+    <div class="card"
+{% endblock %}
